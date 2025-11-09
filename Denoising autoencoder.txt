@@ -1,0 +1,73 @@
+import tensorflow as tf
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense, Flatten, Reshape
+from tensorflow.keras.datasets import mnist
+import numpy as np
+import matplotlib.pyplot as plt
+
+(x_train, _), (x_test, _) = mnist.load_data()
+x_train = x_train.reshape(-1, 28, 28, 1) / 255.0
+x_test = x_test.reshape(-1, 28, 28, 1) / 255.0	
+
+input_img = Input(shape=(28, 28, 1))
+
+x = Flatten()(input_img)
+x = Dense(128, activation='relu')(x)
+encoded = Dense(64, activation='relu')(x)
+
+x = Dense(128, activation='relu')(encoded)
+x = Dense(28 * 28, activation='sigmoid')(x)
+decoded = Reshape((28, 28, 1))(x) # The "reconstructed" image
+
+autoencoder = Model(input_img, decoded)
+autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
+
+print("--- Training the simple autoencoder ---")
+autoencoder.fit(
+    x_train, 
+    x_train,  # Note: The input and target are the same
+    epochs=5,
+    batch_size=32,
+    shuffle=True,
+    validation_data=(x_test, x_test),
+    verbose=1
+)
+
+print("\n--- Reconstructing test images ---")
+reconstructed_images = autoencoder.predict(x_test)
+
+print("Displaying 10 sample results...")
+n = 10
+plt.figure(figsize=(20, 4)) # 2 rows, 10 columns
+for i in range(n):
+    # Display Original
+    ax = plt.subplot(2, n, i + 1)
+    plt.imshow(x_test[i].reshape(28, 28), cmap='gray')
+    ax.set_title("Original")
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+print("Displaying 10 sample results...")
+n = 10
+plt.figure(figsize=(20, 4))  # 2 rows, 10 columns
+
+for i in range(n):
+    # Display Original
+    ax = plt.subplot(2, n, i + 1)
+    plt.imshow(x_test[i].reshape(28, 28), cmap='gray')
+    ax.set_title("Original")
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+    # Display Reconstructed
+    ax = plt.subplot(2, n, i + 1 + n)
+    plt.imshow(reconstructed_images[i].reshape(28, 28), cmap='gray')
+    ax.set_title("Reconstructed")
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+plt.tight_layout()
+plt.savefig("autoencoder_results.png")
+print("Saved comparison image to 'autoencoder_results.png'")
+plt.show()
+

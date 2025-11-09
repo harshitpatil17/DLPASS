@@ -1,0 +1,48 @@
+//Implementation using Tensforflow
+import tensorflow as tf
+import numpy as np
+
+a = tf.random.uniform(shape=[16, 16], minval=0.0, maxval=101.0, dtype=tf.float32)
+b = tf.random.uniform(shape=[16, 16], minval=0.0, maxval=101.0, dtype=tf.float32)
+
+print("Addition:\n",tf.add(a,b))
+print("\nSubtraction:\n",tf.subtract(a,b))
+print("\nMultiplication(element-wise:\n",tf.matmul(a,b))
+print("\nDivision:\n",tf.divide(a,b))
+print("\nMean of A:\n",tf.reduce_mean(a))
+print("\nMax of B:\n",tf.reduce_max(b))
+print("\nTranspose of A :\n",tf.transpose(a))
+
+c=tf.eye(num_rows=16,dtype=tf.float32)
+print("\nBroadcasted Add:\n",a+c)
+
+arr=tf.constant(np.arange(1,13),shape=(3,4))
+print("\nOriginal:\n",arr)
+print("\nSlice[1:3,1:3]:\n",arr[1:3,1:3])
+
+x=tf.Variable(3.0)
+with tf.GradientTape() as tape:
+    y=x**2+5*x+2
+    grad=tape.gradient(y,x)
+    print("\nGradient of y=x^2+5x+2 at x=3:",grad.numpy())	
+
+
+PYTORCH
+import torch
+import numpy as np
+
+A =torch.randint(low=0,high=101,size=(16,16))
+B=torch.randint(low=0,high=101,size=(16,16))
+
+print("Addition:\n",A+B)
+print("\nSubtraction:\n",A-B)
+print("\nMultiplication(element-wise):\n",A*B)
+print("\nDivision:\n",A / B)
+print("\nMean of A:\n",A.float().mean())
+print("\nMax of B:\n",B.max())
+print("\nTranspose of A :\n",A.T)
+
+C=torch.arange(1,13).reshape(3,4)
+print("\nOriginal Tensor C :\n",C)
+print("\nReshaped (2,6):\n",C.reshape(2,6))
+print("\nConcatenation along rows:\n",torch.cat([A,B],dim=0))
