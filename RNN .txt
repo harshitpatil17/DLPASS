@@ -1,0 +1,45 @@
+import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+X = np.array([[0], [1], [2], [3], [4]], dtype=float)
+y = np.array([[1], [2], [3], [4], [5]], dtype=float)
+
+X = X / np.max(X)
+y = y / np.max(y)
+
+Wxh = np.random.rand(1, 1)  # input to hidden
+Whh = np.random.rand(1, 1)  # hidden to hidden
+Why = np.random.rand(1, 1)  # hidden to output
+
+hidden_state = 0
+lr = 0.1  # learning rate
+
+for epoch in range(3000):
+    for i in range(len(X)):
+        x = X[i]
+
+        # Forward pass
+        hidden_state = sigmoid(x * Wxh + hidden_state * Whh)
+        output = sigmoid(hidden_state * Why)
+
+        # Error
+        error = y[i] - output
+
+        # Weight updates
+        Why += lr * hidden_state * error
+        Wxh += lr * x * error
+        Whh += lr * hidden_state * error
+
+    # ✅ Print loss every 500 epochs
+    if epoch % 500 == 0:
+        print("Epoch:", epoch, "Loss:", np.mean(np.abs(error)))
+
+print("\nPredictions after training:")
+hidden_state = 0
+for i in range(len(X)):
+    x = X[i]
+    hidden_state = sigmoid(x * Wxh + hidden_state * Whh)
+    output = sigmoid(hidden_state * Why)
+    print("Input:", i, "Predicted:", round(output.item() * np.max(y), 2))

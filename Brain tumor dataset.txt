@@ -1,0 +1,125 @@
+import os
+import zipfile
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.optimizers import Adam
+import matplotlib.pyplot as plt
+import numpy as np
+
+zip_path = r"C:\Users\Home\Downloads\brain tumour.zip"
+extract_path = r"C:\Users\Home\Downloads\brain_tumour_data"
+
+
+with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+    zip_ref.extractall(extract_path)
+
+print("✅ Dataset extracted to:", extract_path)
+
+train_dir = r"C:\Users\Home\Downloads\brain tumour\Training"
+test_dir = r"C:\Users\Home\Downloads\brain tumour\Testing"
+
+train_datagen = ImageDataGenerator(
+    rescale=1./255,
+    rotation_range=20,
+    zoom_range=0.2,
+    shear_range=0.2,
+    horizontal_flip=True
+)
+
+
+train_datagen = ImageDataGenerator(rescale=1./255)
+test_datagen = ImageDataGenerator(rescale=1./255)
+
+train_data = train_datagen.flow_from_directory(
+    train_dir,
+    target_size=(150, 150),
+    batch_size=16,
+    class_mode='categorical'
+)
+
+test_data = test_datagen.flow_from_directory(
+    test_dir,
+    target_size=(150, 150),
+    batch_size=16,
+    class_mode='categorical'
+)
+
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),
+    MaxPooling2D(2, 2),
+
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D(2, 2),
+
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D(2, 2),
+
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(4, activation='softmax')  # 4 classes
+])
+
+model.compile(
+    optimizer=Adam(learning_rate=0.0001),
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+
+model.summary()
+
+history = model.fit(
+    train_data,
+    validation_data=test_data,
+    epochs=10
+)
+
+loss, acc = model.evaluate(test_data)
+print(f"\n✅ Test Accuracy: {acc * 100:.2f}%")
+
+plt.figure(figsize=(8, 5))
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Model Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
+
+
+
+x_test_batch, y_test_batch = next(test_data)
+
+# Make predictions on first 5 images
+predictions = model.predict(x_test_batch[:5])
+
+# Convert one-hot encoded labels to class indices
+predicted_indices = np.argmax(predictions, axis=-1)
+actual_indices = np.argmax(y_test_batch[:5], axis=-1)
+
+# ✅ Get class names from your test_data generator
+class_names = list(test_data.class_indices.keys())
+
+# Set up a 1x5 grid for visualization
+plt.figure(figsize=(15, 4))
+for i in range(5):
+    plt.subplot(1, 5, i + 1)
+    plt.imshow(x_test_batch[i])
+    
+    pred_name = class_names[predicted_indices[i]]
+    actual_name = class_names[actual_indices[i]]
+    
+    # Green title if correct, red if incorrect
+    color = 'green' if pred_name == actual_name else 'red'
+    plt.title(f"Pred: {pred_name}\nActual: {actual_name}", color=color)
+    plt.axis('off')
+
+plt.tight_layout()
+plt.savefig('brain_tumor_predictions.png')
+plt.show()
+
+
+
