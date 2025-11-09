@@ -1,0 +1,60 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.datasets import mnist
+import numpy as np
+import matplotlib.pyplot as plt
+
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+model = Sequential([
+    Flatten(input_shape=(28, 28)),
+    Dense(128, activation='relu'),
+    Dense(64, activation='relu'),
+    Dense(10, activation='softmax')
+])
+
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+print("--- Training the model ---")
+model.fit(
+    x_train, 
+    y_train, 
+    epochs=5,
+    validation_split=0.1, # Use 10% of training data for validation
+    verbose=1
+)
+
+print("\n--- Evaluating on test data ---")
+test_loss, test_acc = model.evaluate(x_test, y_test, verbose=2)
+print(f"\nOverall Test accuracy: {test_acc*100:.2f}%")
+
+print("\n--- Displaying individual predictions ---")
+
+# Get predictions for just the first 10 images in the test set
+predictions = model.predict(x_test[:10])
+predicted_labels = np.argmax(predictions, axis=1)
+
+# Get the actual labels for those 10 images
+actual_labels = y_test[:10]
+
+plt.figure(figsize=(10, 5))
+for i in range(10):
+    # Create a subplot
+    plt.subplot(2, 5, i + 1)
+    
+    # Display the test image
+    plt.imshow(x_test[i], cmap='gray')
+    
+    # Set the title with the prediction and the actual label
+    plt.title(f"Pred: {predicted_labels[i]}\nActual: {actual_labels[i]}")
+    
+    # Hide the axes
+    plt.axis('off')
